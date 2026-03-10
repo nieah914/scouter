@@ -1,0 +1,140 @@
+<!-- Progressive Form 조각 (step 별로 재사용) -->
+<div class="space-y-5">
+
+    <!-- 진행도 게이지 -->
+    <div class="border border-rpg-border bg-rpg-panel rounded-lg p-3">
+        <div class="flex justify-between items-center mb-2">
+            <span class="font-pixel text-rpg-gray text-xs">SCANNING...</span>
+            <span class="font-pixel text-rpg-green text-xs">{{ step }}/10</span>
+        </div>
+        <div class="flex space-x-1">
+            {% for i in range(1, 11) %}
+            <div class="h-2 flex-1 rounded-sm {{ 'bg-rpg-green' if i <= step else 'bg-rpg-border' }}"></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 질문 패널 -->
+    <div class="border border-rpg-border bg-rpg-panel rounded-lg p-5 space-y-4">
+
+        <!-- 스탯 레이블 -->
+        <div class="font-pixel text-rpg-yellow text-xs tracking-wider">
+            {{ stat_label }}
+        </div>
+
+        <!-- 질문 텍스트 -->
+        <h2 class="text-white text-base font-bold leading-snug">{{ question }}</h2>
+
+        <!-- 입력 폼 -->
+        <form
+            hx-post="/api/submit-step"
+            hx-target="#main-content"
+            hx-swap="innerHTML transition:true"
+            hx-indicator="#loading-indicator"
+            class="space-y-4">
+
+            <input type="hidden" name="step" value="{{ step }}">
+            <input type="hidden" name="user_token" id="form-token" value="">
+
+            <!-- 스텝별 입력 렌더링 -->
+            {% if input_type == "select" %}
+            <div class="grid grid-cols-2 gap-2">
+                {% for option in options %}
+                <label class="cursor-pointer">
+                    <input type="radio" name="{{ field_name }}" value="{{ option.value }}"
+                           class="hidden peer" required>
+                    <div class="border border-rpg-border bg-rpg-bg rounded-lg p-3 text-center text-sm
+                                peer-checked:border-rpg-green peer-checked:bg-rpg-green peer-checked:text-black
+                                hover:border-rpg-gray transition-colors">
+                        {{ option.label }}
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+
+            {% elif input_type == "slider" %}
+            <div class="space-y-3">
+                {% for field in fields %}
+                <div class="space-y-1">
+                    <div class="flex justify-between">
+                        <label class="text-rpg-gray text-sm">{{ field.label }}</label>
+                        <span class="text-rpg-green text-sm font-bold" id="{{ field.name }}-val">{{ field.default }}{{ field.unit }}</span>
+                    </div>
+                    <input type="range"
+                           name="{{ field.name }}"
+                           min="{{ field.min }}" max="{{ field.max }}" step="{{ field.step }}"
+                           value="{{ field.default }}"
+                           class="w-full accent-rpg-green"
+                           oninput="document.getElementById('{{ field.name }}-val').textContent = this.value + '{{ field.unit }}'">
+                </div>
+                {% endfor %}
+            </div>
+
+            {% elif input_type == "number" %}
+            <div class="space-y-3">
+                {% for field in fields %}
+                <div class="space-y-1">
+                    <label class="text-rpg-gray text-sm">{{ field.label }}</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="number"
+                               name="{{ field.name }}"
+                               min="{{ field.min }}" max="{{ field.max }}"
+                               placeholder="{{ field.placeholder }}"
+                               class="flex-1 bg-rpg-bg border border-rpg-border rounded-lg px-3 py-2
+                                      text-white text-sm focus:border-rpg-green focus:outline-none"
+                               required>
+                        <span class="text-rpg-gray text-sm w-10">{{ field.unit }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% elif input_type == "card_select" %}
+            <div class="space-y-2">
+                {% for option in options %}
+                <label class="cursor-pointer block">
+                    <input type="radio" name="{{ field_name }}" value="{{ option.value }}"
+                           class="hidden peer" required>
+                    <div class="border border-rpg-border bg-rpg-bg rounded-lg p-3
+                                peer-checked:border-rpg-green peer-checked:bg-rpg-green/10
+                                hover:border-rpg-gray transition-colors">
+                        <div class="text-sm font-bold">{{ option.label }}</div>
+                        {% if option.desc %}
+                        <div class="text-rpg-gray text-xs mt-1">{{ option.desc }}</div>
+                        {% endif %}
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- 제출 버튼 -->
+            <button type="submit"
+                    class="w-full bg-rpg-green text-black font-pixel font-bold py-3 px-6 rounded-lg
+                           hover:bg-green-400 active:scale-95 transition-all duration-150
+                           border-2 border-green-300 text-sm tracking-wider">
+                [ 다음 스탯 확인하기 → ]
+            </button>
+        </form>
+
+        <!-- 로딩 인디케이터 -->
+        <div id="loading-indicator" class="htmx-indicator text-center">
+            <span class="text-rpg-gray text-xs animate-pulse">스캐닝 중...</span>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- 로컬스토리지에서 토큰 세팅 -->
+<script>
+(function() {
+    let token = localStorage.getItem('user_token');
+    if (!token) {
+        token = crypto.randomUUID();
+        localStorage.setItem('user_token', token);
+    }
+    const el = document.getElementById('form-token');
+    if (el) el.value = token;
+})();
+</script>

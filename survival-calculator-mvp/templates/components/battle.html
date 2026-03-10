@@ -1,0 +1,265 @@
+<!-- 배틀 결과 fragment -->
+<div class="space-y-4">
+
+    <!-- 배틀 헤더 -->
+    <div class="text-center font-pixel text-rpg-yellow text-xs tracking-widest">
+        ⚔ BATTLE START ⚔
+    </div>
+
+    <!-- ===== 배틀 아레나 (애니메이션 전용) ===== -->
+    <div id="battle-arena"
+         class="border-2 border-rpg-border bg-rpg-panel rounded-lg overflow-hidden"
+         style="position:relative; height:180px;">
+
+        <!-- 배경 플래시 오버레이 -->
+        <div id="clash-overlay"
+             style="position:absolute;inset:0;background:white;opacity:0;pointer-events:none;z-index:10;transition:opacity 0.1s;"></div>
+
+        <!-- Challenger 스프라이트 (왼쪽) -->
+        <div id="arena-left"
+             style="position:absolute; top:50%; left:25%; transform:translate(-50%,-50%) translateX(-200px); transition:transform 0.5s ease; z-index:2;">
+            {% if challenger_data.character_id %}
+            <div class="pixel-sprite pixel-sprite-animated"
+                 id="sprite-left"
+                 style="background-image:url('/static/images/{{ challenger_data.character_id }}_sprite.png');
+                        width:100px; height:100px;"></div>
+            {% else %}
+            <div id="sprite-left" style="font-size:60px; line-height:100px; width:100px; height:100px; text-align:center;">
+                {{ challenger_data.emoji }}
+            </div>
+            {% endif %}
+            <div id="label-left" class="text-center font-pixel text-rpg-gray text-xs mt-1" style="opacity:0;">
+                CHALLENGER
+            </div>
+        </div>
+
+        <!-- Defender 스프라이트 (오른쪽, 미러) -->
+        <div id="arena-right"
+             style="position:absolute; top:50%; left:75%; transform:translate(-50%,-50%) translateX(200px); transition:transform 0.5s ease; z-index:2;">
+            {% if defender_data.character_id %}
+            <div class="pixel-sprite pixel-sprite-animated"
+                 id="sprite-right"
+                 style="background-image:url('/static/images/{{ defender_data.character_id }}_sprite.png');
+                        width:100px; height:100px; transform:scaleX(-1);"></div>
+            {% else %}
+            <div id="sprite-right" style="font-size:60px; line-height:100px; width:100px; height:100px; text-align:center; transform:scaleX(-1);">
+                {{ defender_data.emoji }}
+            </div>
+            {% endif %}
+            <div id="label-right" class="text-center font-pixel text-rpg-gray text-xs mt-1" style="opacity:0;">
+                DEFENDER
+            </div>
+        </div>
+
+        <!-- 충돌 이펙트 텍스트 -->
+        <div id="clash-text"
+             style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);
+                    z-index:5; text-align:center; transition:transform 0.2s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.3s;">
+            <div style="font-size:36px;">💥</div>
+        </div>
+
+        <!-- 승자 WINNER 뱃지 -->
+        <div id="winner-badge"
+             style="position:absolute;top:8px;left:50%;transform:translateX(-50%) scale(0);
+                    z-index:6; opacity:0; transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.3s;">
+            <div class="font-pixel text-rpg-yellow text-sm px-3 py-1 rounded"
+                 style="border:2px solid #ffd700; background:rgba(255,215,0,0.15);">
+                🏆 WINNER
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 결과 섹션 (애니메이션 후 공개) ===== -->
+    <div id="battle-result" style="opacity:0; transition:opacity 0.5s ease;">
+
+        <!-- 두 캐릭터 스탯 비교 -->
+        <div class="border border-rpg-border bg-rpg-panel rounded-lg p-4">
+            <div class="flex gap-3">
+
+                <!-- Challenger 스탯 -->
+                <div class="flex-1 text-center space-y-2">
+                    <div class="text-rpg-gray text-xs font-pixel">CHALLENGER</div>
+                    <div class="text-white text-xs">{{ challenger_data.emoji }} {{ challenger_data.character_name }}</div>
+                    <div class="border border-rpg-border rounded p-2">
+                        <div class="font-pixel text-lg {% if winner == 'challenger' %}text-rpg-yellow{% else %}text-rpg-gray{% endif %}">
+                            {{ challenger_data.battle_score }}
+                        </div>
+                        <div class="text-rpg-gray text-xs">SCORE</div>
+                    </div>
+                    <div class="text-xs text-rpg-gray space-y-0.5">
+                        <div>⚔ <span class="text-white">{{ challenger_data.str_score }}</span></div>
+                        <div>💨 <span class="text-white">{{ challenger_data.agi_score }}</span></div>
+                        <div>❤ <span class="text-white">{{ challenger_data.hp_score }}</span></div>
+                        <div>☠ <span class="text-rpg-red">{{ challenger_data.debuff_score }}</span></div>
+                    </div>
+                </div>
+
+                <!-- VS 구분선 -->
+                <div class="flex-none flex items-center">
+                    <div class="font-pixel text-rpg-border text-sm">VS</div>
+                </div>
+
+                <!-- Defender 스탯 -->
+                <div class="flex-1 text-center space-y-2">
+                    <div class="text-rpg-gray text-xs font-pixel">DEFENDER</div>
+                    <div class="text-white text-xs">{{ defender_data.emoji }} {{ defender_data.character_name }}</div>
+                    <div class="border border-rpg-border rounded p-2">
+                        <div class="font-pixel text-lg {% if winner == 'defender' %}text-rpg-yellow{% else %}text-rpg-gray{% endif %}">
+                            {{ defender_data.battle_score }}
+                        </div>
+                        <div class="text-rpg-gray text-xs">SCORE</div>
+                    </div>
+                    <div class="text-xs text-rpg-gray space-y-0.5">
+                        <div>⚔ <span class="text-white">{{ defender_data.str_score }}</span></div>
+                        <div>💨 <span class="text-white">{{ defender_data.agi_score }}</span></div>
+                        <div>❤ <span class="text-white">{{ defender_data.hp_score }}</span></div>
+                        <div>☠ <span class="text-rpg-red">{{ defender_data.debuff_score }}</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 결과 메시지 -->
+        <div class="border border-rpg-border bg-rpg-panel rounded-lg p-4 text-center space-y-2">
+            {% if winner == 'challenger' %}
+            <div class="font-pixel text-rpg-yellow text-sm">🏆 도전자의 압도적 승리!</div>
+            <div class="text-rpg-gray text-xs">배틀 스코어 차이: <span class="text-rpg-green">+{{ score_diff }}</span></div>
+            {% elif winner == 'defender' %}
+            <div class="font-pixel text-rpg-green text-sm">🛡 수비자의 역전 방어 성공!</div>
+            <div class="text-rpg-gray text-xs">배틀 스코어 차이: <span class="text-rpg-green">+{{ score_diff }}</span></div>
+            {% else %}
+            <div class="font-pixel text-rpg-blue text-sm">🤝 완벽한 동점! 무승부</div>
+            <div class="text-rpg-gray text-xs">두 용사의 전투력이 동일합니다</div>
+            {% endif %}
+        </div>
+
+        <!-- 버튼 -->
+        <div class="flex gap-2">
+            <button onclick="location.href='/'"
+                    class="flex-1 text-xs border border-rpg-border text-rpg-gray rounded px-3 py-2 hover:border-rpg-gray transition-colors">
+                🔍 나도 측정하기
+            </button>
+            {% if my_result_link %}
+            <button onclick="location.href='{{ my_result_link }}'"
+                    class="flex-1 text-xs border border-rpg-green text-rpg-green rounded px-3 py-2 hover:bg-rpg-green/10 transition-colors">
+                📊 내 결과 보기
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+(function() {
+    const WINNER = "{{ winner }}";  // 'challenger' | 'defender' | 'draw'
+
+    const arenaLeft  = document.getElementById('arena-left');
+    const arenaRight = document.getElementById('arena-right');
+    const spriteLeft  = document.getElementById('sprite-left');
+    const spriteRight = document.getElementById('sprite-right');
+    const clashOverlay = document.getElementById('clash-overlay');
+    const clashText  = document.getElementById('clash-text');
+    const winnerBadge = document.getElementById('winner-badge');
+    const labelLeft  = document.getElementById('label-left');
+    const labelRight = document.getElementById('label-right');
+    const battleResult = document.getElementById('battle-result');
+
+    // 승자/패자 판별
+    const winnerEl = WINNER === 'challenger' ? arenaLeft  : arenaRight;
+    const loserEl  = WINNER === 'challenger' ? arenaRight : arenaLeft;
+    const winnerSide = WINNER === 'challenger' ? 'left' : 'right';
+
+    // ── Phase 1 (100ms): 양쪽에서 슬라이드인 ──
+    setTimeout(function() {
+        arenaLeft.style.transform  = 'translate(-50%,-50%) translateX(0)';
+        arenaRight.style.transform = 'translate(-50%,-50%) translateX(0)';
+        labelLeft.style.opacity  = '1';
+        labelLeft.style.transition = 'opacity 0.4s 0.3s';
+        labelRight.style.opacity = '1';
+        labelRight.style.transition = 'opacity 0.4s 0.3s';
+    }, 100);
+
+    // ── Phase 2 (800ms): 서로를 향해 돌진 ──
+    setTimeout(function() {
+        arenaLeft.style.transition  = 'transform 0.35s ease-in';
+        arenaRight.style.transition = 'transform 0.35s ease-in';
+        // 왼쪽은 오른쪽으로, 오른쪽은 왼쪽으로 이동해서 중앙에서 충돌
+        arenaLeft.style.transform  = 'translate(-50%,-50%) translateX(80px)';
+        arenaRight.style.transform = 'translate(-50%,-50%) translateX(-80px)';
+        labelLeft.style.opacity  = '0';
+        labelRight.style.opacity = '0';
+    }, 800);
+
+    // ── Phase 3 (1150ms): 충돌 플래시 + 이펙트 ──
+    setTimeout(function() {
+        // 화면 번쩍임
+        clashOverlay.style.opacity = '0.85';
+        clashText.style.transform  = 'translate(-50%,-50%) scale(1.2)';
+        clashText.style.opacity    = '1';
+        // 진동 효과
+        document.getElementById('battle-arena').classList.add('battle-shake');
+    }, 1150);
+
+    // ── Phase 4 (1300ms): 플래시 꺼짐 + 패자 날아감 ──
+    setTimeout(function() {
+        clashOverlay.style.opacity = '0';
+        document.getElementById('battle-arena').classList.remove('battle-shake');
+
+        if (WINNER === 'draw') {
+            // 무승부: 둘 다 제자리로
+            arenaLeft.style.transition  = 'transform 0.4s ease-out';
+            arenaRight.style.transition = 'transform 0.4s ease-out';
+            arenaLeft.style.transform  = 'translate(-50%,-50%) translateX(0)';
+            arenaRight.style.transform = 'translate(-50%,-50%) translateX(0)';
+            clashText.style.transform  = 'translate(-50%,-50%) scale(0)';
+            // DRAW 배너
+            winnerBadge.querySelector('div').textContent = '🤝 DRAW';
+            winnerBadge.querySelector('div').style.borderColor = '#4488ff';
+            winnerBadge.querySelector('div').style.background  = 'rgba(68,136,255,0.15)';
+            winnerBadge.querySelector('div').style.color = '#4488ff';
+            winnerBadge.style.transform = 'translateX(-50%) scale(1)';
+            winnerBadge.style.opacity   = '1';
+            return;
+        }
+
+        // 패자: 날아가서 사라짐
+        loserEl.style.transition = 'transform 0.4s ease-in, opacity 0.4s ease-in';
+        if (WINNER === 'challenger') {
+            loserEl.style.transform = 'translate(-50%,-50%) translateX(220px)';
+        } else {
+            loserEl.style.transform = 'translate(-50%,-50%) translateX(-220px)';
+        }
+        loserEl.style.opacity = '0';
+
+        // 충돌 텍스트 사라짐
+        clashText.style.transition = 'transform 0.3s, opacity 0.3s';
+        clashText.style.transform  = 'translate(-50%,-50%) scale(0)';
+        clashText.style.opacity    = '0';
+    }, 1300);
+
+    // ── Phase 5 (1700ms): 승자 중앙 이동 + 확대 + WINNER 뱃지 ──
+    setTimeout(function() {
+        if (WINNER === 'draw') return;
+
+        // 승자 중앙으로 이동 + 확대
+        winnerEl.style.transition = 'transform 0.5s cubic-bezier(0.175,0.885,0.32,1.275)';
+        winnerEl.style.transform  = 'translate(-50%,-50%) translateX(0) scale(1.35)';
+
+        // 승자 캐릭터에 glow 효과
+        const winnerSprite = winnerSide === 'left' ? spriteLeft : spriteRight;
+        winnerSprite.style.filter = 'brightness(1.4) drop-shadow(0 0 8px #ffd700)';
+
+        // WINNER 뱃지 등장
+        setTimeout(function() {
+            winnerBadge.style.transform = 'translateX(-50%) scale(1)';
+            winnerBadge.style.opacity   = '1';
+        }, 300);
+    }, 1700);
+
+    // ── Phase 6 (2500ms): 결과 섹션 공개 ──
+    setTimeout(function() {
+        battleResult.style.opacity = '1';
+    }, 2500);
+})();
+</script>

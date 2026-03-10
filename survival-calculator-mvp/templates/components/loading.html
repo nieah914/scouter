@@ -1,0 +1,82 @@
+<!-- 로딩/분석 대기 화면 조각 -->
+<div class="space-y-5"
+     hx-get="/api/calculate"
+     hx-trigger="load delay:2.5s"
+     hx-target="#main-content"
+     hx-swap="innerHTML transition:true"
+     hx-include="[name='user_token']">
+
+    <input type="hidden" name="user_token" id="loading-token" value="">
+
+    <!-- 상단 패널 -->
+    <div class="border border-rpg-border bg-rpg-panel rounded-lg p-5 text-center space-y-6">
+
+        <div class="font-pixel text-rpg-yellow text-xs tracking-widest animate-pulse">
+            ⚡ ANALYZING... ⚡
+        </div>
+
+        <!-- 픽셀 아트 스캔 이펙트 -->
+        <div class="relative py-4">
+            <div class="text-6xl">🔬</div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-20 h-20 border-2 border-rpg-green rounded-full animate-ping opacity-30"></div>
+            </div>
+        </div>
+
+        <!-- 순차 로딩 텍스트 -->
+        <div class="space-y-3 min-h-[120px]">
+            <div class="loading-msg text-sm text-rpg-gray" id="msg-1">
+                <span class="text-rpg-green">▶</span> 국민건강보험공단 데이터 접속 중...
+            </div>
+            <div class="loading-msg text-sm text-rpg-gray opacity-0" id="msg-2">
+                <span class="text-rpg-blue">▶</span> 전국 5,000만 국민 데이터와 대결 중...
+            </div>
+            <div class="loading-msg text-sm text-rpg-gray opacity-0" id="msg-3">
+                <span class="text-rpg-yellow">▶</span> 990원어치 보충제 섭취 중...
+            </div>
+            <div class="loading-msg text-sm text-rpg-gray opacity-0" id="msg-4">
+                <span class="text-rpg-red">▶</span> 잠긴 생존 데이터를 해킹하는 중...
+            </div>
+            <div class="loading-msg text-sm text-white font-bold opacity-0" id="msg-5">
+                <span class="text-rpg-green">▶</span> 스캔 완료. 결과 분석 중...
+            </div>
+        </div>
+
+        <!-- 진행 바 -->
+        <div class="w-full bg-rpg-border rounded-full h-2">
+            <div class="bg-rpg-green h-2 rounded-full loading-bar" style="width: 0%"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+(function() {
+    // 토큰 세팅
+    const token = localStorage.getItem('user_token') || '';
+    document.getElementById('loading-token').value = token;
+
+    // 메시지 순차 표시 애니메이션
+    const msgs = ['msg-1', 'msg-2', 'msg-3', 'msg-4', 'msg-5'];
+    const bar = document.querySelector('.loading-bar');
+    let progress = 0;
+
+    msgs.forEach((id, i) => {
+        setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.classList.remove('opacity-0');
+                el.classList.add('transition-opacity', 'duration-500');
+            }
+        }, i * 450);
+    });
+
+    // 진행 바 애니메이션
+    const interval = setInterval(() => {
+        progress = Math.min(progress + 4, 95);
+        if (bar) bar.style.width = progress + '%';
+        if (progress >= 95) clearInterval(interval);
+    }, 100);
+})();
+</script>

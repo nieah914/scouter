@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="battle-content" class="space-y-4">
+    <!-- 로딩 상태 -->
+    <div id="battle-loading" class="text-center py-20 space-y-3">
+        <div class="text-rpg-green font-pixel text-sm animate-pulse">⚔ BATTLE LOADING... ⚔</div>
+        <div class="text-rpg-gray text-xs">전투 데이터를 불러오는 중...</div>
+        <div class="flex justify-center gap-1 mt-4">
+            <span class="text-rpg-red text-2xl animate-pulse">⚔</span>
+            <span class="text-rpg-yellow text-2xl">VS</span>
+            <span class="text-rpg-blue text-2xl animate-pulse" style="transform:scaleX(-1);display:inline-block">⚔</span>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const challenger = "{{ challenger }}";
+    const defender = localStorage.getItem('user_token') || '';
+
+    if (!challenger) {
+        document.getElementById('battle-content').innerHTML = `
+            <div class="text-center py-16 space-y-4">
+                <div class="text-4xl">❓</div>
+                <div class="font-pixel text-rpg-red text-sm">잘못된 배틀 링크입니다</div>
+                <button hx-get="/api/components/landing" hx-target="#main-content" hx-swap="innerHTML"
+                        class="text-rpg-green border border-rpg-green rounded px-4 py-2 text-sm font-pixel">
+                    처음으로 돌아가기
+                </button>
+            </div>`;
+        return;
+    }
+
+    // defender 없으면 challenger 토큰 저장 후 설문으로 이동
+    if (!defender) {
+        localStorage.setItem('pending_battle_challenger', challenger);
+        document.getElementById('battle-content').innerHTML = `
+            <div class="space-y-4">
+                <div class="text-center font-pixel text-rpg-yellow text-xs tracking-widest">⚔ BATTLE CHALLENGE ⚔</div>
+                <div class="border-2 border-rpg-red/50 bg-rpg-panel rounded-lg p-6 text-center space-y-4">
+                    <div class="text-4xl animate-pulse">⚔</div>
+                    <div class="font-pixel text-rpg-yellow text-sm">배틀 신청이 도착했습니다!</div>
+                    <div class="text-rpg-gray text-xs leading-relaxed">
+                        먼저 당신의 전투력을 측정해야<br>배틀 결과를 확인할 수 있어요
+                    </div>
+                </div>
+                <button onclick="location.href='/'"
+                        class="w-full bg-rpg-green text-black font-pixel font-bold py-3 rounded-lg text-sm">
+                    ⚡ 나도 측정하고 배틀하기
+                </button>
+            </div>`;
+        return;
+    }
+
+    const url = '/api/components/battle?challenger=' + encodeURIComponent(challenger)
+              + '&defender=' + encodeURIComponent(defender);
+
+    fetch(url)
+        .then(res => res.text())
+        .then(html => {
+            const container = document.getElementById('battle-content');
+            container.innerHTML = html;
+            // innerHTML 주입 후 script 태그 수동 재실행
+            container.querySelectorAll('script').forEach(function(oldScript) {
+                const newScript = document.createElement('script');
+                newScript.textContent = oldScript.textContent;
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+        })
+        .catch(() => {
+            document.getElementById('battle-content').innerHTML = `
+                <div class="text-center py-16 space-y-4">
+                    <div class="text-4xl">💥</div>
+                    <div class="font-pixel text-rpg-red text-sm">배틀 데이터 로드 실패</div>
+                    <div class="text-rpg-gray text-xs">잠시 후 다시 시도해 주세요.</div>
+                </div>`;
+        });
+})();
+</script>
+{% endblock %}

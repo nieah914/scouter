@@ -1,0 +1,88 @@
+<!-- Step 1 전용: 성별 + 나이 혼합 입력 -->
+<div class="space-y-5">
+
+    <!-- 진행도 게이지 -->
+    <div class="border border-rpg-border bg-rpg-panel rounded-lg p-3">
+        <div class="flex justify-between items-center mb-2">
+            <span class="font-pixel text-rpg-gray text-xs">SCANNING...</span>
+            <span class="font-pixel text-rpg-green text-xs">1/10</span>
+        </div>
+        <div class="flex space-x-1">
+            {% for i in range(1, 11) %}
+            <div class="h-2 flex-1 rounded-sm {{ 'bg-rpg-green' if i == 1 else 'bg-rpg-border' }}"></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 질문 패널 -->
+    <div class="border border-rpg-border bg-rpg-panel rounded-lg p-5 space-y-5">
+
+        <div class="font-pixel text-rpg-yellow text-xs tracking-wider">[ 기본 정보 스캐닝 ]</div>
+        <h2 class="text-white text-base font-bold">용사의 기본 정보를 입력해 주세요.</h2>
+
+        <form
+            hx-post="/api/submit-step1"
+            hx-target="#main-content"
+            hx-swap="innerHTML transition:true"
+            class="space-y-5">
+
+            <input type="hidden" name="user_token" id="form-token-s1" value="">
+
+            <!-- 성별 선택 -->
+            <div class="space-y-2">
+                <label class="text-rpg-gray text-sm">성별</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="gender" value="M" class="hidden peer" required>
+                        <div class="border border-rpg-border bg-rpg-bg rounded-lg p-3 text-center text-sm
+                                    peer-checked:border-rpg-green peer-checked:bg-rpg-green peer-checked:text-black
+                                    hover:border-rpg-gray transition-colors">
+                            ⚔ 남성
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="gender" value="F" class="hidden peer" required>
+                        <div class="border border-rpg-border bg-rpg-bg rounded-lg p-3 text-center text-sm
+                                    peer-checked:border-rpg-green peer-checked:bg-rpg-green peer-checked:text-black
+                                    hover:border-rpg-gray transition-colors">
+                            🪄 여성
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 나이 슬라이더 -->
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <label class="text-rpg-gray text-sm">나이</label>
+                    <span class="text-rpg-green text-sm font-bold" id="age-val">30세</span>
+                </div>
+                <input type="range" name="age" min="15" max="70" step="1" value="30"
+                       class="w-full accent-rpg-green"
+                       oninput="document.getElementById('age-val').textContent = this.value + '세'">
+                <div class="flex justify-between text-rpg-gray text-xs">
+                    <span>15세</span><span>70세</span>
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-rpg-green text-black font-pixel font-bold py-3 px-6 rounded-lg
+                           hover:bg-green-400 active:scale-95 transition-all duration-150
+                           border-2 border-green-300 text-sm tracking-wider">
+                [ 다음 스탯 확인하기 → ]
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    let token = localStorage.getItem('user_token');
+    if (!token) {
+        token = crypto.randomUUID();
+        localStorage.setItem('user_token', token);
+    }
+    const el = document.getElementById('form-token-s1');
+    if (el) el.value = token;
+})();
+</script>

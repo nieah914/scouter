@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>현대인 생존 전투력 측정기</title>
+
+    <!-- OG 메타태그 (카카오톡/인스타 공유용 썸네일) -->
+    <meta property="og:title" content="현대인 생존 전투력 측정기">
+    <meta property="og:description" content="당신의 숨겨진 생존 스탯을 스캐닝합니다. 나의 전투력은 몇 %?">
+    <meta property="og:image" content="/static/images/og_image.png">
+    <meta property="og:type" content="website">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- HTMX CDN -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+    <!-- 구글 폰트 - 레트로 픽셀 감성 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- 커스텀 CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <script>
+        // Tailwind 다크 테마 커스텀 설정
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        pixel: ['DotGothic16', 'monospace'],
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                    },
+                    colors: {
+                        rpg: {
+                            bg: '#0a0a0f',
+                            panel: '#12121e',
+                            border: '#2a2a4a',
+                            green: '#00ff88',
+                            yellow: '#ffd700',
+                            red: '#ff4444',
+                            blue: '#4488ff',
+                            gray: '#888899',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-rpg-bg text-white min-h-screen font-sans">
+
+    <!-- 상단 헤더 -->
+    <header class="border-b border-rpg-border py-3 px-4 text-center">
+        <span class="font-pixel text-rpg-green text-sm tracking-widest">⚔ STATUS SCANNER v1.0 ⚔</span>
+    </header>
+
+    <!-- 메인 컨테이너 -->
+    <main class="flex justify-center items-start min-h-[calc(100vh-56px)] py-6 px-4">
+        <div class="w-full max-w-md">
+            <!-- HTMX 조각 화면이 교체되는 영역 -->
+            <div id="main-content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </main>
+
+    <!-- HTMX 전환 효과 스크립트 -->
+    <script>
+        // HTMX 화면 전환 시 fade 효과
+        document.body.addEventListener('htmx:beforeSwap', function(evt) {
+            const target = evt.detail.target;
+            if (target.id === 'main-content') {
+                target.classList.add('fade-out');
+            }
+        });
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            const target = evt.detail.target;
+            if (target.id === 'main-content') {
+                target.classList.remove('fade-out');
+                target.classList.add('fade-in');
+                setTimeout(() => target.classList.remove('fade-in'), 400);
+            }
+        });
+    </script>
+</body>
+</html>

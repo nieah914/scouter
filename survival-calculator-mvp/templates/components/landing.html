@@ -1,0 +1,60 @@
+<!-- 랜딩 화면 조각 -->
+<div class="text-center space-y-6">
+
+    <!-- RPG 상태창 스타일 패널 -->
+    <div class="border border-rpg-border bg-rpg-panel rounded-lg p-6 space-y-4">
+
+        <!-- 픽셀 로고 -->
+        <div class="space-y-1">
+            <div class="font-pixel text-rpg-yellow text-xs tracking-widest">★ SYSTEM ALERT ★</div>
+            <h1 class="font-pixel text-rpg-green text-lg leading-tight">
+                현대인<br>생존 전투력<br>측정기
+            </h1>
+            <div class="font-pixel text-rpg-gray text-xs">MODERN HUMAN SURVIVAL SCANNER</div>
+        </div>
+
+        <!-- 픽셀 아트 캐릭터 자리 (에셋 생성 후 교체) -->
+        <div class="flex justify-center py-4">
+            <div class="pixel-sprite pixel-char-placeholder" id="main-character">
+                <!-- 캐릭터 이미지 자리 -->
+                <div class="w-24 h-24 border border-rpg-border rounded flex items-center justify-center">
+                    <span class="text-4xl">⚔</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 서브카피 -->
+        <div class="space-y-2">
+            <p class="text-rpg-gray text-sm">당신의 숨겨진 생존 스탯을 스캐닝합니다.</p>
+            <p class="text-white text-xs">
+                <span class="text-rpg-yellow">● </span>
+                국민체력100 · 건강보험공단 공공데이터 기반
+            </p>
+        </div>
+
+        <!-- 소셜 프루프 (참여자 수) -->
+        {% if participant_count and participant_count > 0 %}
+        <div class="text-rpg-gray text-xs animate-pulse">
+            👥 현재까지 <span class="text-rpg-green font-bold">{{ participant_count | format_number }}</span>명이 스캐닝을 완료했습니다
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- CTA 버튼 -->
+    <button
+        hx-get="/api/components/form/1"
+        hx-target="#main-content"
+        hx-swap="innerHTML transition:true"
+        class="w-full bg-rpg-green text-black font-pixel font-bold py-4 px-6 rounded-lg
+               hover:bg-green-400 active:scale-95 transition-all duration-150
+               border-2 border-green-300 text-sm tracking-wider">
+        [ 스캐닝 시작하기 ]
+    </button>
+
+    <!-- 안내 문구 -->
+    <p class="text-rpg-gray text-xs">
+        * 총 6개 문항 · 소요 시간 약 1분
+    </p>
+
+</div>

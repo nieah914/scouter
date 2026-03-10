@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- 랜딩 컴포넌트를 기본으로 로드 -->
+<div hx-get="/api/components/landing"
+     hx-trigger="load"
+     hx-target="#main-content"
+     hx-swap="innerHTML transition:true">
+    <!-- 로딩 중 표시 -->
+    <div class="text-center py-20">
+        <div class="text-rpg-green font-pixel text-sm animate-pulse">LOADING...</div>
+    </div>
+</div>
+{% endblock %}

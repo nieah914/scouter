@@ -1,0 +1,299 @@
+/* ===== 현대인 생존 전투력 측정기 - 커스텀 스타일 ===== */
+
+/* 기본 색상 변수 */
+:root {
+    --rpg-bg: #0a0a0f;
+    --rpg-panel: #12121e;
+    --rpg-border: #2a2a4a;
+    --rpg-green: #00ff88;
+    --rpg-yellow: #ffd700;
+    --rpg-red: #ff4444;
+    --rpg-blue: #4488ff;
+    --rpg-gray: #888899;
+}
+
+/* 스크롤바 스타일 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--rpg-bg); }
+::-webkit-scrollbar-thumb { background: var(--rpg-border); border-radius: 3px; }
+
+/* ===== 화면 전환 애니메이션 ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-8px); }
+}
+
+.fade-in  { animation: fadeIn  0.35s ease forwards; }
+.fade-out { animation: fadeOut 0.2s ease forwards; }
+
+/* HTMX 로딩 인디케이터 */
+.htmx-indicator { display: none; }
+.htmx-request .htmx-indicator { display: block; }
+
+/* ===== 픽셀 아트 스프라이트 애니메이션 ===== */
+
+/* 공통 스프라이트 클래스 */
+.pixel-sprite {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;  /* Firefox */
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+    display: inline-block;
+}
+
+/* 4프레임 Idle 애니메이션 */
+@keyframes idle-anim {
+    from { background-position-x: 0; }
+    to   { background-position-x: -100%; }
+}
+
+.pixel-sprite-animated {
+    animation: idle-anim 0.8s steps(4) infinite;
+}
+
+/* 캐릭터별 스프라이트 크기 */
+.pixel-char-lg {
+    width: 150px;
+    height: 150px;
+}
+
+.pixel-char-md {
+    width: 100px;
+    height: 100px;
+}
+
+/* 캐릭터 자리 플레이스홀더 (에셋 미생성 시) */
+.pixel-char-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===== RPG 상태창 공통 스타일 ===== */
+
+/* 등급 배지 */
+.grade-badge {
+    font-family: 'DotGothic16', monospace;
+    border: 2px solid var(--rpg-yellow);
+    background: rgba(255, 215, 0, 0.1);
+    padding: 4px 16px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* 스탯 바 */
+.stat-bar {
+    height: 8px;
+    background: var(--rpg-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.stat-bar-fill {
+    height: 100%;
+    background: var(--rpg-green);
+    border-radius: 4px;
+    width: 0;
+    transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.stat-bar-fill.danger {
+    background: var(--rpg-red);
+}
+
+.stat-bar-fill.warning {
+    background: var(--rpg-yellow);
+}
+
+/* ===== 입력 폼 스타일 ===== */
+
+/* 라디오 버튼 기반 카드 선택 효과 */
+input[type="radio"]:checked + div,
+input[type="radio"]:checked + label > div {
+    border-color: var(--rpg-green);
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--rpg-green);
+}
+
+/* 슬라이더 스타일 */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--rpg-border);
+    border-radius: 3px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--rpg-green);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--rpg-bg);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: var(--rpg-green);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid var(--rpg-bg);
+}
+
+/* 숫자 입력 스타일 */
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ===== 페이월 블러 효과 ===== */
+.paywall-blur {
+    filter: blur(6px);
+    pointer-events: none;
+    user-select: none;
+}
+
+/* 블러 해제 애니메이션 */
+@keyframes unlockReveal {
+    from { filter: blur(6px); opacity: 0.5; }
+    to   { filter: blur(0);   opacity: 1;   }
+}
+
+.unlock-animate {
+    animation: unlockReveal 0.6s ease forwards;
+}
+
+/* ===== 로딩 바 애니메이션 ===== */
+@keyframes loadingBar {
+    0%   { width: 0%; }
+    100% { width: 95%; }
+}
+
+.loading-bar-auto {
+    animation: loadingBar 2.3s ease forwards;
+}
+
+/* ===== 가챠 결과 공개 연출 ===== */
+
+/* 등급 뱃지: 스케일 + 밝기 플래시 */
+@keyframes gradeReveal {
+    0%   { transform: scale(0.4) rotateY(90deg); opacity: 0; filter: brightness(4); }
+    50%  { transform: scale(1.25) rotateY(0deg); opacity: 1; filter: brightness(2); }
+    75%  { transform: scale(0.95); filter: brightness(1.3); }
+    100% { transform: scale(1);   opacity: 1; filter: brightness(1); }
+}
+
+.gacha-grade-reveal {
+    animation: gradeReveal 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* 캐릭터: 위에서 바운스인 */
+@keyframes charBounceIn {
+    0%   { transform: translateY(-30px) scale(0.7); opacity: 0; }
+    60%  { transform: translateY(6px) scale(1.08);  opacity: 1; }
+    80%  { transform: translateY(-3px) scale(0.97); }
+    100% { transform: translateY(0) scale(1);        opacity: 1; }
+}
+
+.gacha-char-reveal {
+    animation: charBounceIn 0.55s ease forwards;
+}
+
+/* ===== 친구 배틀 애니메이션 ===== */
+
+/* 캐릭터 입장: 왼쪽에서 슬라이드인 */
+.battle-slide-left {
+    opacity: 0;
+    transform: translateX(-60px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* 캐릭터 입장: 오른쪽에서 슬라이드인 */
+.battle-slide-right {
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* 입장 완료 상태 */
+.battle-slide-left.battle-enter,
+.battle-slide-right.battle-enter {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* 승자 캐릭터: 확대 + 맥박 */
+@keyframes winnerPulse {
+    0%   { transform: scale(1.3); filter: brightness(1.2); }
+    50%  { transform: scale(1.4); filter: brightness(1.5); }
+    100% { transform: scale(1.3); filter: brightness(1.2); }
+}
+
+.battle-winner-char {
+    animation: idle-anim 0.8s steps(4) infinite,
+               winnerPulse 1.2s ease-in-out infinite;
+    transform-origin: center bottom;
+}
+
+/* 패자 캐릭터: 흐리게 */
+.battle-loser-char {
+    opacity: 0.4;
+    filter: grayscale(0.8);
+}
+
+/* 동점 캐릭터 */
+.battle-draw-char {
+    opacity: 0.9;
+}
+
+/* 충돌 이펙트 번쩍임 */
+@keyframes clashFlash {
+    0%   { transform: scale(0.5); opacity: 0; }
+    30%  { transform: scale(1.4); opacity: 1; filter: brightness(3); }
+    60%  { transform: scale(1.1); filter: brightness(1.5); }
+    100% { transform: scale(1);   opacity: 1; filter: brightness(1); }
+}
+
+.clash-flash {
+    opacity: 0;
+    transform: scale(0.5);
+}
+
+.clash-active {
+    animation: clashFlash 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* 아레나 진동 (충돌 시) */
+@keyframes battleShake {
+    0%   { transform: translateX(0); }
+    20%  { transform: translateX(-6px); }
+    40%  { transform: translateX(6px); }
+    60%  { transform: translateX(-4px); }
+    80%  { transform: translateX(4px); }
+    100% { transform: translateX(0); }
+}
+
+.battle-shake {
+    animation: battleShake 0.3s ease;
+}
+
+/* ===== 모바일 반응형 ===== */
+@media (max-width: 400px) {
+    .pixel-char-lg {
+        width: 100px;
+        height: 100px;
+    }
+}

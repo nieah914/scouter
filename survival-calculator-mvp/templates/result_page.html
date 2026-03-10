@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div hx-get="/api/result?token={{ token }}"
+     hx-trigger="load"
+     hx-target="#main-content"
+     hx-swap="innerHTML transition:true">
+    <div class="text-center py-20 space-y-3">
+        <div class="text-rpg-green font-pixel text-sm animate-pulse">⚡ LOADING RESULT... ⚡</div>
+        <div class="text-rpg-gray text-xs">저장된 스캔 데이터를 불러오는 중...</div>
+    </div>
+</div>
+{% endblock %}
