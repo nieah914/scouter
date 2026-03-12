@@ -24,8 +24,10 @@ from app.services.session import get_session, update_session
 from app.database.db_client import get_supabase
 from app.config import get_settings
 
+import os as _os
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
+_BASE_DIR = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+templates = Jinja2Templates(directory=_os.path.join(_BASE_DIR, "templates"))
 
 # 커스텀 필터 등록
 def format_number(value):

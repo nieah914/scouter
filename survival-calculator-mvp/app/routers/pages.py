@@ -5,8 +5,10 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+import os as _os
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
+_BASE_DIR = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+templates = Jinja2Templates(directory=_os.path.join(_BASE_DIR, "templates"))
 
 # Jinja2 커스텀 필터
 def format_number(value):
