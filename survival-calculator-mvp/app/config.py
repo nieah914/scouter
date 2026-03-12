@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     # Toss Payments
     toss_client_key: str = ""
     toss_secret_key: str = ""
+    toss_webhook_secret: str = ""
+
+    # 공공데이터 포털
+    public_data_api_key: str = ""
 
     # App
     app_env: str = "development"

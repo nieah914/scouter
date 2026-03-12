@@ -15,7 +15,7 @@
         <!-- 캐릭터 스프라이트 -->
         <div class="flex justify-center py-2" id="char-display" style="opacity:0">
             {% if character_id %}
-            <div class="pixel-sprite pixel-sprite-animated"
+            <div class="pixel-sprite pixel-sprite-float"
                  style="background-image: url('/static/images/{{ character_id }}_sprite.png');
                         width: 150px; height: 150px;"></div>
             {% else %}
@@ -40,7 +40,7 @@
         <div class="flex justify-center gap-2">
             <button onclick="shareResult()"
                     class="text-xs text-rpg-gray border border-rpg-border rounded px-3 py-1 hover:border-rpg-gray transition-colors">
-                📸 공유하기
+                💬 카카오 공유
             </button>
             <button onclick="copyResultLink()"
                     class="text-xs text-rpg-gray border border-rpg-border rounded px-3 py-1 hover:border-rpg-gray transition-colors">
@@ -57,6 +57,16 @@
             </button>
         </div>
     </div>
+
+    <!-- 캐릭터 멘트 -->
+    {% if character_quote %}
+    <div id="char-quote" class="opacity-0">
+        <div class="border border-rpg-yellow/30 bg-rpg-yellow/5 rounded-lg p-4 relative">
+            <div class="font-pixel text-rpg-yellow text-xs mb-2">[ {{ character_emoji }} 독백 ]</div>
+            <p class="text-white text-sm leading-relaxed italic">"{{ character_quote }}"</p>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- 스탯 미리보기 (항상 노출) -->
     <div id="stat-overview" class="border border-rpg-border bg-rpg-panel rounded-lg p-4 space-y-3 opacity-0">
@@ -216,102 +226,196 @@
         { id: 'char-display', delay: 200,  cls: 'gacha-char-reveal' },
         { id: 'grade-badge',  delay: 700,  cls: 'gacha-grade-reveal' },
         { id: 'char-title',   delay: 1300, cls: 'fade-in' },
-        { id: 'stat-overview',delay: 1700, cls: 'fade-in' },
+        { id: 'char-quote',   delay: 1600, cls: 'fade-in' },
+        { id: 'stat-overview',delay: 1900, cls: 'fade-in' },
     ];
-    seq.forEach(({ id, delay, cls }) => {
-        setTimeout(() => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.style.opacity = '1';
-            el.classList.add(cls);
-            // stat bars 애니메이션 (double rAF: 브라우저가 width:0 렌더링 후 transition 발동)
-            if (id === 'stat-overview') {
-                el.querySelectorAll('.stat-bar-fill').forEach(bar => {
-                    const w = bar.getAttribute('data-width') || '0';
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => { bar.style.width = w + '%'; });
+
+    function startSequence() {
+        seq.forEach(({ id, delay, cls }) => {
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.style.opacity = '1';
+                el.classList.add(cls);
+                if (id === 'stat-overview') {
+                    el.querySelectorAll('.stat-bar-fill').forEach(bar => {
+                        const w = bar.getAttribute('data-width') || '0';
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => { bar.style.width = w + '%'; });
+                        });
                     });
-                });
-            }
-        }, delay);
-    });
+                }
+            }, delay);
+        });
+    }
+
+    // 캐릭터 스프라이트 이미지 프리로드 후 애니메이션 시작
+    var spriteEl = document.querySelector('#char-display .pixel-sprite');
+    if (spriteEl) {
+        var bgUrl = spriteEl.style.backgroundImage.replace(/^url\(["']?|["']?\)$/g, '');
+        if (bgUrl) {
+            var img = new Image();
+            img.onload  = startSequence;
+            img.onerror = startSequence; // 이미지 없어도 연출은 진행
+            // 최대 3초 대기 후 강제 시작 (네트워크 지연 대비)
+            var fallback = setTimeout(startSequence, 3000);
+            img.onload = img.onerror = function() {
+                clearTimeout(fallback);
+                startSequence();
+            };
+            img.src = bgUrl;
+        } else {
+            startSequence();
+        }
+    } else {
+        startSequence();
+    }
 })();
 </script>
 
 <!-- 결과 공유 및 매직 링크 스크립트 -->
 <script>
-const userToken = localStorage.getItem('user_token') || '';
-const resultLink = "{{ result_link }}" || (location.origin + '/api/result?token=' + userToken);
+// ── 전역 변수로 저장 (HTMX eval 클로저 문제 방지) ──────────
+window._svResultLink = "{{ result_link }}";
+
+(function() {
+    // localStorage 우선, 없으면 result_link URL에서 추출
+    var t = localStorage.getItem('user_token') || '';
+    if (!t && window._svResultLink) {
+        try {
+            var _u = new URL(window._svResultLink);
+            var _t = _u.searchParams.get('token') || '';
+            if (_t) { t = _t; localStorage.setItem('user_token', _t); }
+        } catch(e) {}
+    }
+    window._svToken = t;
+})();
+
+// ── 헬퍼: 항상 최신 토큰 반환 ──────────────────────────────
+function _getToken() {
+    return window._svToken || localStorage.getItem('user_token') || '';
+}
 
 function shareResult() {
-    const text = "나의 생존 전투력은 {{ grade }} - {{ title }}! 너도 테스트해봐 👇";
+    var link = window._svResultLink;
+    var grade = "{{ grade }}";
+    var title = "{{ title }}";
+
+    // 카카오 공유 우선
+    console.log('[Kakao] window.Kakao:', !!window.Kakao, '| isInitialized:', window.Kakao && Kakao.isInitialized());
+    if (window.Kakao && Kakao.isInitialized()) {
+        Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+                title: '현대인 생존 전투력 측정기',
+                description: '내 등급: ' + grade + ' · ' + title + '\n나의 생존 스탯은?',
+                imageUrl: location.origin + '/static/images/og_image.png',
+                link: {
+                    mobileWebUrl: link,
+                    webUrl: link,
+                },
+            },
+            buttons: [
+                {
+                    title: '내 결과 보기',
+                    link: { mobileWebUrl: link, webUrl: link },
+                },
+                {
+                    title: '나도 측정하기',
+                    link: { mobileWebUrl: location.origin, webUrl: location.origin },
+                },
+            ],
+        });
+        return;
+    }
+
+    // 카카오 SDK 없으면 Web Share API → 클립보드 순으로 폴백
+    var text = '나의 생존 전투력은 ' + grade + ' - ' + title + '! 너도 테스트해봐 👇';
     if (navigator.share) {
-        navigator.share({ title: '현대인 생존 전투력 측정기', text: text, url: resultLink });
+        navigator.share({ title: '현대인 생존 전투력 측정기', text: text, url: link });
     } else {
-        navigator.clipboard.writeText(text + '\n' + resultLink)
-            .then(() => alert('클립보드에 복사되었습니다!'));
+        _copyText(text + '\n' + link, '클립보드에 복사되었습니다!');
     }
 }
 
 function copyResultLink() {
-    navigator.clipboard.writeText(resultLink)
-        .then(() => alert('결과 URL이 복사됐습니다! 저장해두면 언제든 다시 볼 수 있어요 🔗'))
-        .catch(() => {
-            prompt('아래 URL을 복사해 주세요:', resultLink);
-        });
+    _copyText(window._svResultLink, '결과 URL이 복사됐습니다! 저장해두면 언제든 다시 볼 수 있어요 🔗');
 }
 
 function copyMagicLink(link) {
-    navigator.clipboard.writeText(link)
-        .then(() => alert('링크가 복사되었습니다! 꼭 저장해 두세요 🔗'));
+    _copyText(link, '링크가 복사되었습니다! 꼭 저장해 두세요 🔗');
+}
+
+function _copyText(text, successMsg) {
+    // HTTPS에서만 Clipboard API 사용 (HTTP에서는 hang 발생)
+    if (location.protocol === 'https:' && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+            .then(function() { alert(successMsg); })
+            .catch(function() { _execCopy(text, successMsg); });
+    } else {
+        _execCopy(text, successMsg);
+    }
+}
+
+function _execCopy(text, successMsg) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+        document.execCommand('copy');
+        alert(successMsg);
+    } catch(e) {
+        prompt('아래 링크를 복사해 주세요:', text);
+    }
+    document.body.removeChild(ta);
 }
 
 function startBattle() {
-    if (!userToken) {
+    var token = _getToken();
+    if (!token) {
         alert('배틀을 신청하려면 먼저 스캔을 완료해야 합니다!');
         return;
     }
-    const battleUrl = location.origin + '/battle?challenger=' + userToken;
-    navigator.clipboard.writeText(battleUrl)
-        .then(() => alert('배틀 링크가 복사됐습니다!\n친구에게 보내고 결과를 기다리세요 ⚔'))
-        .catch(() => {
-            prompt('아래 링크를 친구에게 보내세요:', battleUrl);
-        });
+    var battleUrl = location.origin + '/battle?challenger=' + token;
+    _copyText(battleUrl, '배틀 링크가 복사됐습니다!\n친구에게 보내고 결과를 기다리세요 ⚔');
 }
 
 // 배틀 링크 타고 들어온 경우: 설문 완료 후 자동으로 배틀 페이지로 이동
 (function() {
-    const pendingChallenger = localStorage.getItem('pending_battle_challenger');
-    if (!pendingChallenger || !userToken) return;
-    if (pendingChallenger === userToken) {
-        // 자기 자신과 배틀 시도 방지
+    var pendingChallenger = localStorage.getItem('pending_battle_challenger');
+    var myToken = _getToken();
+    if (!pendingChallenger || !myToken) return;
+    if (pendingChallenger === myToken) {
         localStorage.removeItem('pending_battle_challenger');
         return;
     }
 
-    // pending 배틀 알림 배너 표시
-    const banner = document.createElement('div');
+    var banner = document.createElement('div');
     banner.id = 'pending-battle-banner';
     banner.className = 'border-2 border-rpg-red bg-rpg-red/10 rounded-lg p-3 text-center space-y-2';
-    banner.innerHTML = `
-        <div class="font-pixel text-rpg-red text-xs animate-pulse">⚔ 배틀 신청이 대기 중입니다!</div>
-        <div class="flex gap-2 justify-center">
-            <button onclick="goToBattle()"
-                    class="text-xs bg-rpg-red text-white font-pixel rounded px-3 py-1.5">
-                ⚔ 지금 배틀하기
-            </button>
-            <button onclick="dismissBattle()"
-                    class="text-xs border border-rpg-border text-rpg-gray rounded px-3 py-1.5">
-                나중에
-            </button>
-        </div>`;
+    banner.innerHTML = '\
+        <div class="font-pixel text-rpg-red text-xs animate-pulse">⚔ 배틀 신청이 대기 중입니다!</div>\
+        <div class="flex gap-2 justify-center">\
+            <button onclick="goToBattle()"\
+                    class="text-xs bg-rpg-red text-white font-pixel rounded px-3 py-1.5">\
+                ⚔ 지금 배틀하기\
+            </button>\
+            <button onclick="dismissBattle()"\
+                    class="text-xs border border-rpg-border text-rpg-gray rounded px-3 py-1.5">\
+                나중에\
+            </button>\
+        </div>';
 
-    const card = document.getElementById('character-card');
+    var card = document.getElementById('character-card');
     if (card) card.parentNode.insertBefore(banner, card);
 })();
 
 function goToBattle() {
-    const pendingChallenger = localStorage.getItem('pending_battle_challenger');
+    var pendingChallenger = localStorage.getItem('pending_battle_challenger');
     if (pendingChallenger) {
         localStorage.removeItem('pending_battle_challenger');
         location.href = '/battle?challenger=' + pendingChallenger;
@@ -320,33 +424,34 @@ function goToBattle() {
 
 function dismissBattle() {
     localStorage.removeItem('pending_battle_challenger');
-    const banner = document.getElementById('pending-battle-banner');
+    var banner = document.getElementById('pending-battle-banner');
     if (banner) banner.remove();
 }
 
 {% if not is_paid %}
 // 토스페이먼츠 결제 위젯 초기화
-const tossClientKey = "{{ toss_client_key }}";
+window._svTossKey = "{{ toss_client_key }}";
 
 async function requestPayment() {
+    var token = _getToken();
     try {
-        const tossPayments = TossPayments(tossClientKey);
-        const orderId = 'order_' + Date.now() + '_' + userToken.substring(0, 8);
+        var tossPayments = TossPayments(window._svTossKey);
+        var orderId = 'order_' + Date.now() + '_' + (token || 'anon').substring(0, 8);
 
         await tossPayments.requestPayment('카드', {
             amount: 990,
             orderId: orderId,
             orderName: '현대인 생존 전투력 리포트',
             customerName: '익명 용사',
-            successUrl: location.origin + '/api/payment/success?user_token=' + userToken,
+            successUrl: location.origin + '/api/payment/success?user_token=' + token,
             failUrl: location.origin + '/api/payment/fail',
-            // 간편결제만 노출 (가상계좌 제외)
             flowMode: 'DIRECT',
             easyPay: '토스페이',
         });
     } catch (e) {
         if (e.code !== 'USER_CANCEL') {
-            alert('결제 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+            console.error('[TossPayments Error]', e.code, e.message, e);
+            alert('결제 중 오류가 발생했습니다.\n코드: ' + (e.code || '알 수 없음') + '\n' + (e.message || ''));
         }
     }
 }
@@ -354,6 +459,6 @@ async function requestPayment() {
 </script>
 
 {% if not is_paid %}
-<!-- 토스페이먼츠 JS SDK -->
-<script src="https://js.tosspayments.com/v2/standard"></script>
+<!-- 토스페이먼츠 JS SDK v1 (requestPayment 호환) -->
+<script src="https://js.tosspayments.com/v1/payment"></script>
 {% endif %}

@@ -146,6 +146,13 @@
             </button>
             {% endif %}
         </div>
+
+        <!-- 연쇄 배틀 신청 -->
+        <button onclick="chainBattle()"
+                class="w-full text-xs text-rpg-red border border-rpg-red rounded px-3 py-2
+                       hover:bg-rpg-red/10 transition-colors font-pixel tracking-wider">
+            ⚔ 다른 사람에게 배틀 신청하기
+        </button>
     </div>
 
 </div>
@@ -262,4 +269,35 @@
         battleResult.style.opacity = '1';
     }, 2500);
 })();
+
+function chainBattle() {
+    var myToken = localStorage.getItem('user_token') || '';
+    if (!myToken) {
+        alert('배틀을 신청하려면 먼저 전투력 스캔을 완료해야 합니다!');
+        return;
+    }
+    var battleUrl = location.origin + '/battle?challenger=' + myToken;
+    var msg = '배틀 링크가 복사됐습니다!\n친구에게 보내고 결과를 기다리세요 ⚔';
+
+    if (location.protocol === 'https:' && navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(battleUrl)
+            .then(function() { alert(msg); })
+            .catch(function() { _battleExecCopy(battleUrl, msg); });
+    } else {
+        _battleExecCopy(battleUrl, msg);
+    }
+}
+
+function _battleExecCopy(text, successMsg) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); alert(successMsg); }
+    catch(e) { prompt('아래 링크를 복사해 주세요:', text); }
+    document.body.removeChild(ta);
+}
 </script>

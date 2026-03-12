@@ -20,6 +20,7 @@ from app.services.stats import (
 )
 from app.services.ai import generate_survival_report, predict_diseases
 from app.services.payment import confirm_payment, check_payment_status
+from app.services.session import get_session, update_session
 from app.database.db_client import get_supabase
 from app.config import get_settings
 
@@ -256,10 +257,6 @@ async def component_form(request: Request, step: int):
 # 스텝 폼 제출 처리
 # ============================================================
 
-# 임시 세션 저장 (서버 메모리 - 프로덕션에서는 Redis 권장)
-_session_store: dict[str, dict] = {}
-
-
 @router.post("/submit-step", response_class=HTMLResponse)
 async def submit_step(
     request: Request,
@@ -280,38 +277,37 @@ async def submit_step(
 ):
     """각 단계 답변 저장 후 다음 화면 반환"""
 
-    # 세션 초기화
-    if user_token not in _session_store:
-        _session_store[user_token] = {}
-
-    session = _session_store[user_token]
-
-    # 단계별 데이터 저장
+    # 단계별 저장할 필드 수집
+    updates: dict = {}
     if step == 1:
-        if gender: session["gender"] = gender
-        if age:    session["age"] = age
+        if gender: updates["gender"] = gender
+        if age:    updates["age"] = age
     elif step == 2:
-        if height: session["height"] = float(height)
-        if weight: session["weight"] = float(weight)
+        if height: updates["height"] = float(height)
+        if weight: updates["weight"] = float(weight)
     elif step == 3:
-        if sleep_hours: session["sleep_hours"] = float(sleep_hours)
+        if sleep_hours: updates["sleep_hours"] = float(sleep_hours)
     elif step == 4:
-        if pushup_count is not None: session["pushup_count"] = int(pushup_count)
+        if pushup_count is not None: updates["pushup_count"] = int(pushup_count)
     elif step == 5:
-        if running_count: session["running_count"] = int(running_count)
+        if running_count: updates["running_count"] = int(running_count)
     elif step == 6:
         if debuff:
             parts = debuff.split("_")
-            session["coffee_cups"]   = int(parts[0]) if len(parts) > 0 else 0
-            session["overtime_days"] = int(parts[1]) if len(parts) > 1 else 0
+            updates["coffee_cups"]   = int(parts[0]) if len(parts) > 0 else 0
+            updates["overtime_days"] = int(parts[1]) if len(parts) > 1 else 0
     elif step == 7:
-        if diet is not None: session["diet_score"] = int(diet)
+        if diet is not None: updates["diet_score"] = int(diet)
     elif step == 8:
-        if stress is not None: session["stress_score"] = int(stress)
+        if stress is not None: updates["stress_score"] = int(stress)
     elif step == 9:
-        if sitting is not None: session["sitting_hours"] = int(sitting)
+        if sitting is not None: updates["sitting_hours"] = int(sitting)
     elif step == 10:
-        if alcohol is not None: session["alcohol_freq"] = int(alcohol)
+        if alcohol is not None: updates["alcohol_freq"] = int(alcohol)
+
+    # DB 세션에 병합 저장
+    if updates:
+        await update_session(user_token, updates)
 
     # 다음 단계 또는 로딩 화면으로
     next_step = step + 1
@@ -336,9 +332,7 @@ async def submit_step1(
     gender: str = Form(...),
     age: int = Form(...),
 ):
-    if user_token not in _session_store:
-        _session_store[user_token] = {}
-    _session_store[user_token].update({"gender": gender, "age": age})
+    await update_session(user_token, {"gender": gender, "age": age})
 
     config = STEP_CONFIG[2].copy()
     config["step"] = 2
@@ -358,7 +352,7 @@ async def calculate_result(
     """세션 데이터로 스탯 계산 + AI 리포트 생성 + DB 저장"""
 
     # 세션에서 유저 데이터 로드
-    session = _session_store.get(user_token, {})
+    session = await get_session(user_token)
     if not session:
         # 세션 없으면 처음으로
         return templates.TemplateResponse("components/landing.html", {
@@ -449,6 +443,7 @@ async def calculate_result(
         "is_paid": False,
         "character_id": character["id"],
         "character_emoji": character["emoji"],
+        "character_quote": character.get("quote", ""),
         "grade": report.grade,
         "title": report.title,
         "summary": report.summary,
@@ -621,11 +616,14 @@ async def _render_paid_result(request: Request, user_token: str) -> HTMLResponse
         )
         magic_link = f"{request.base_url}result?token={user_token}"
 
+        from app.services.stats import CHARACTER_INFO
+        char_quote = CHARACTER_INFO.get(character["id"], {}).get("quote", "")
         return templates.TemplateResponse("components/result.html", {
             "request": request,
             "is_paid": True,
             "character_id": character["id"],
             "character_emoji": character["emoji"],
+            "character_quote": char_quote,
             "grade": report.grade,
             "title": report.title,
             "summary": report.summary,
@@ -673,11 +671,14 @@ async def _render_free_result(request: Request, user_token: str) -> HTMLResponse
         settings = get_settings()
         result_link = f"{request.base_url}result?token={user_token}"
 
+        from app.services.stats import CHARACTER_INFO
+        char_quote = CHARACTER_INFO.get(character["id"], {}).get("quote", "")
         return templates.TemplateResponse("components/result.html", {
             "request": request,
             "is_paid": False,
             "character_id": character["id"],
             "character_emoji": character["emoji"],
+            "character_quote": char_quote,
             "grade": report.grade,
             "title": report.title,
             "summary": report.summary,

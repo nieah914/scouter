@@ -1,5 +1,47 @@
 # 작업 히스토리
 
+## 2026-03-11 - T-15: Vercel 배포 준비 (세션 → Supabase DB 전환)
+
+### 변경 파일
+| 파일 | 내용 |
+|------|------|
+| `app/services/session.py` | 신규 생성 — DB 세션 CRUD (`get_session`, `update_session`) |
+| `app/routers/api.py` | `_session_store` 제거 → `get_session`/`update_session` 교체 |
+| `supabase_schema.sql` | `sessions` 테이블 추가 |
+| `vercel.json` | Vercel 배포 설정 신규 생성 |
+| `.vercelignore` | 배포 제외 파일 목록 생성 |
+| `test_battle_debug.py` | 세션 mock 방식 업데이트 |
+| `test_payment_e2e.py` | 세션 mock 방식 업데이트 |
+
+### 테스트: 15/15 PASS
+
+---
+
+## 2026-03-11 - T-14: TossPayments E2E 결제 테스트 완료
+
+### 변경 파일
+| 파일 | 내용 |
+|------|------|
+| `survival-calculator-mvp/test_payment_e2e.py` | 신규 생성 - 결제 E2E 테스트 8종 |
+| `plan.md` | T-14 작업 내역 추가 |
+
+### 테스트 결과 (8/8 PASS)
+1. confirm_payment → Toss 승인 API 파라미터 검증
+2. 잘못된 금액(990원 불일치) → 400 오류
+3. /api/payment/success → confirm_payment + _render_paid_result 호출
+4. /api/payment/fail → 정상 HTML 반환
+5. 유료 결과 화면 → AI 리포트 노출 + 페이월 미노출
+6. 미결제 결과 화면 → 페이월 + LOCKED 오버레이 노출
+7. successUrl/failUrl에 /api/ prefix 포함 확인
+8. Toss API 실패 응답 → HTTPException(400) 전파
+
+### 주요 발견 사항
+- `get_supabase` 패치 시 각 모듈 네임스페이스(`app.services.payment`, `app.routers.api`) 개별 패치 필요
+- successUrl/failUrl /api/ prefix 정상 적용 확인
+- 남은 수동 작업: TossPayments 콘솔에서 허용 URL 등록
+
+---
+
 ## 2026-03-10 - MVP 개발 완료
 
 ### 작업 내용

@@ -38,6 +38,17 @@ CREATE INDEX IF NOT EXISTS idx_users_is_paid    ON users(is_paid);
 -- RLS (Row Level Security) - 서비스 키로만 접근
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
+-- 세션 테이블 (Vercel 서버리스 환경용 — 인메모리 세션 대체)
+CREATE TABLE IF NOT EXISTS sessions (
+    user_token  TEXT PRIMARY KEY,
+    data        JSONB DEFAULT '{}',
+    created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_user_token ON sessions(user_token);
+CREATE INDEX IF NOT EXISTS idx_sessions_updated_at ON sessions(updated_at);
+
 -- 기존 DB에 새 컬럼 추가 (이미 생성된 경우 실행)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS diet_score    INTEGER DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS stress_score  INTEGER DEFAULT 0;

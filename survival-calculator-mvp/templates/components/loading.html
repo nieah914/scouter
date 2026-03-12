@@ -78,5 +78,16 @@
         if (bar) bar.style.width = progress + '%';
         if (progress >= 95) clearInterval(interval);
     }, 100);
+
+    // 결과 화면 전환 전, 모든 캐릭터 스프라이트 프리로드
+    const characters = [
+        'health_avatar', 'swordmaster', 'lich_king', 'burnout_ghost',
+        'hibernating_bear', 'ogre_lord', 'necromancer', 'dwarf_tanker',
+        'orc_berserker', 'elf_ranger', 'wizard'
+    ];
+    characters.forEach(function(id) {
+        var img = new Image();
+        img.src = '/static/images/' + id + '_sprite.png';
+    });
 })();
 </script>

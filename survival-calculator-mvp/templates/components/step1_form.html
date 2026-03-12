@@ -77,12 +77,22 @@
 
 <script>
 (function() {
-    let token = localStorage.getItem('user_token');
+    function makeUUID() {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+            return crypto.randomUUID();
+        }
+        // HTTP/IP 환경 폴백
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+    var token = localStorage.getItem('user_token');
     if (!token) {
-        token = crypto.randomUUID();
+        token = makeUUID();
         localStorage.setItem('user_token', token);
     }
-    const el = document.getElementById('form-token-s1');
+    var el = document.getElementById('form-token-s1');
     if (el) el.value = token;
 })();
 </script>

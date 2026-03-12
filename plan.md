@@ -127,6 +127,32 @@ CREATE TABLE users (
 - [x] Task 07: 소셜 프루프 넛지 (10분 캐싱, 100명 미만 숨김)
 - [x] Task 08: 픽셀 아트 CSS 스프라이트 애니메이션 (steps() 4프레임)
 
+### Task T-15: Vercel 배포 (세션 → Supabase DB 전환)
+- [ ] 1. `supabase_schema.sql` — sessions 테이블 추가
+- [ ] 2. `app/services/session.py` — DB 세션 CRUD 신규 생성
+- [ ] 3. `app/routers/api.py` — `_session_store` → DB 세션으로 교체
+- [ ] 4. `vercel.json` 생성 (survival-calculator-mvp/ 내)
+- [ ] 5. `.vercelignore` 생성
+- [ ] 6. `requirements.txt` 최신화
+- [ ] 7. 테스트 통과 확인
+- [ ] 8. Vercel 배포 가이드 안내
+
+### Task T-14: TossPayments E2E 결제 테스트
+- [x] payment.py / api.py / result.html 코드 파악
+- [x] test_payment_e2e.py 작성 (8개 테스트)
+  - [x] confirm_payment → Toss API 호출 파라미터 검증
+  - [x] 잘못된 금액(990원 불일치) → 400 오류 검증
+  - [x] /api/payment/success → confirm_payment + _render_paid_result 호출 검증
+  - [x] /api/payment/fail → 정상 HTML 반환 검증
+  - [x] 유료 결과 화면 → AI 리포트 노출, 페이월 미노출 검증
+  - [x] 미결제 결과 화면 → 페이월 + LOCKED 오버레이 노출 검증
+  - [x] successUrl/failUrl 에 /api/ prefix 포함 검증
+  - [x] Toss API 실패 응답 → HTTPException(400) 전파 검증
+- [x] 8/8 테스트 통과 확인
+- [ ] [수동] TossPayments 콘솔 successUrl/failUrl 등록
+  - 로컬: `http://localhost:8000/api/payment/success` / `http://localhost:8000/api/payment/fail`
+  - 프로덕션: `https://{도메인}/api/payment/success` / `https://{도메인}/api/payment/fail`
+
 ## 다음 단계 (운영 전 필수)
 - [ ] Supabase 프로젝트 생성 및 supabase_schema.sql 실행
 - [ ] .env 파일에 실제 API 키 입력 (OpenAI, Supabase, 토스페이먼츠)

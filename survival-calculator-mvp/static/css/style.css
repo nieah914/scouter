@@ -42,18 +42,37 @@
     image-rendering: pixelated;
     image-rendering: crisp-edges;  /* Firefox */
     background-repeat: no-repeat;
-    background-size: auto 100%;
+    background-size: 400% 100%;   /* 4프레임 가로 배열 → 1프레임씩 노출 */
+    background-position: 0% 0%;
     display: inline-block;
 }
 
-/* 4프레임 Idle 애니메이션 */
+/*
+  4프레임 스프라이트시트 위치값 (background-size: 400% 기준)
+  frame1=0%  frame2=33.33%  frame3=66.67%  frame4=100%
+*/
 @keyframes idle-anim {
-    from { background-position-x: 0; }
-    to   { background-position-x: -100%; }
+    0%   { background-position-x: 0%; }
+    25%  { background-position-x: 33.33%; }
+    50%  { background-position-x: 66.67%; }
+    75%  { background-position-x: 100%; }
 }
 
+/* steps(1, end): 각 구간에서 시작값을 유지하다 끝에서 즉시 전환 → 자연스러운 프레임 전환 */
 .pixel-sprite-animated {
-    animation: idle-anim 0.8s steps(4) infinite;
+    animation: idle-anim 0.8s steps(1, end) infinite;
+}
+
+/* float 보조 애니메이션 (스프라이트 위아래 부유) */
+@keyframes sprite-float {
+    0%,  100% { transform: translateY(0px); }
+    50%        { transform: translateY(-6px); }
+}
+
+.pixel-sprite-float {
+    animation: idle-anim 0.8s steps(1, end) infinite,
+               sprite-float 2s ease-in-out infinite;
+    transform-origin: center bottom;
 }
 
 /* 캐릭터별 스프라이트 크기 */
@@ -243,7 +262,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 
 .battle-winner-char {
-    animation: idle-anim 0.8s steps(4) infinite,
+    animation: idle-anim 0.8s steps(1, end) infinite,
                winnerPulse 1.2s ease-in-out infinite;
     transform-origin: center bottom;
 }

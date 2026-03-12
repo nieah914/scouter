@@ -17,6 +17,19 @@
     <!-- HTMX CDN -->
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 
+    <!-- 카카오 JavaScript SDK -->
+    <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.Kakao && !Kakao.isInitialized()) {
+                Kakao.init('f32d570dd7f511db968423eadbc19a02');
+                console.log('[Kakao] 초기화 완료:', Kakao.isInitialized());
+            } else if (!window.Kakao) {
+                console.warn('[Kakao] SDK 로드 실패');
+            }
+        });
+    </script>
+
     <!-- 구글 폰트 - 레트로 픽셀 감성 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
