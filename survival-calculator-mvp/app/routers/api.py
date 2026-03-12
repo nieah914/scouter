@@ -714,7 +714,7 @@ def _calc_battle_score(user_data: dict) -> int:
     ) // 4
 
 
-async def _fetch_user_for_battle(token: str) -> dict | None:
+async def _fetch_user_for_battle(token: str) -> Optional[dict]:
     """DB에서 배틀용 유저 데이터 조회"""
     if not token:
         return None
