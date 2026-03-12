@@ -11,7 +11,7 @@ app = FastAPI(title="현대인 생존 전투력 측정기")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 정적 파일 마운트
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "public", "static")), name="static")
 
 # 라우터 등록
 app.include_router(pages.router)
